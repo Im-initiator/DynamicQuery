@@ -28,6 +28,11 @@ public class StudentController {
 	
 	@GetMapping("student/entity-manager")
 	public ResponseEntity<?> getPage(StudentSearchDTO search){
+		return ResponseEntity.ok(service.getPage(search));
+	}
+
+	@GetMapping("student/procedure")
+	public ResponseEntity<?> getPageByProcedure(StudentSearchDTO search){
 		return ResponseEntity.ok(service.getSearch(search));
 	}
 

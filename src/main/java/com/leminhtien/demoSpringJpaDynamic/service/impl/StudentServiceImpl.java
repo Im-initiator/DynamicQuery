@@ -19,6 +19,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.StoredProcedureQuery;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -68,8 +69,9 @@ public class StudentServiceImpl implements StudentService{
 		Pageable pageable = PageRequest.of(request.getPage(),request.getLimit(),sort);
 		
 		Specification<StudentEntity> specification = (root,query,builder)->{
+			Join<StudentEntity,DepartmentEntity> join = null;
 			List<Predicate> predicates = new ArrayList<>();
-			
+			boolean isJoin = true;
 			if( request.getAddress() !=null&&!request.getAddress().isBlank()) {
 				predicates.add(builder.like(root.get("address"),"%"+request.getAddress()+"%"));
 			}
@@ -103,7 +105,46 @@ public class StudentServiceImpl implements StudentService{
 					predicates.add(builder.greaterThan(root.get("dateAdmission"), request.getEndAdmission()));
 				}
 			}
-			
+			if (request.getDepartmentId()!=null){
+				if (join==null){
+					join = root.join("department");
+					predicates.add(builder.equal(join.get("id"),request.getDepartmentId()));
+				}else {
+					predicates.add(builder.equal(join.get("id"),request.getDepartmentId()));
+				}
+			}
+			if (request.getDepartmentAcreage()!=0){
+				if (join==null){
+					join = root.join("department");
+					predicates.add(builder.equal(join.get("acreage"),request.getDepartmentAcreage()));
+				}else {
+					predicates.add(builder.equal(join.get("acreage"),request.getDepartmentAcreage()));
+				}
+			}
+			if (request.getDepartmentName()!=null&&!request.getDepartmentName().isBlank()){
+				if (join==null){
+					join = root.join("department");
+					predicates.add(builder.like(join.get("name"),"%"+request.getDepartmentName()+"%"));
+				}else {
+					predicates.add(builder.like(join.get("name"),"%"+request.getDepartmentName()+"%"));
+				}
+			}
+			if (request.getDepartmentAddress()!=null&&!request.getDepartmentAddress().isBlank()){
+				if (join==null){
+					join = root.join("department");
+					predicates.add(builder.like(join.get("address"),"%"+request.getDepartmentAddress()+"%"));
+				}else {
+					predicates.add(builder.like(join.get("address"),"%"+request.getDepartmentAddress()+"%"));
+				}
+			}
+			if (request.getDepartmentTimeStart()!=null){
+				if (join==null){
+					join = root.join("department");
+					predicates.add(builder.equal(join.get("timeStart"),request.getDepartmentTimeStart()));
+				}else {
+					predicates.add(builder.equal(join.get("timeStart"),request.getDepartmentTimeStart()));
+				}
+			}
 			return builder.and(predicates.toArray(new Predicate[0]));
 		};
 		Page<StudentEntity> page = studentRepository.findAll(specification,pageable);
@@ -123,6 +164,12 @@ public class StudentServiceImpl implements StudentService{
 
 	@Transactional
 	public ResponseDTO getSearch(StudentSearchDTO studentSearchDTO) {
+		if (studentSearchDTO.getLimit() <= 0){
+			studentSearchDTO.setLimit(10);
+		}
+		if (studentSearchDTO.getPage()<0){
+			studentSearchDTO.setPage(0);
+		}
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.registerModule(new JavaTimeModule());
 		List<StudentEntity> list;
@@ -138,26 +185,20 @@ public class StudentServiceImpl implements StudentService{
 		StoredProcedureQuery query = entityManager.createStoredProcedureQuery("SEARCH_STUDENT", StudentEntity.class);
 		StoredProcedureQuery queryCount = entityManager.createStoredProcedureQuery("COUNT_STUDENT",Integer.class);
 		query.registerStoredProcedureParameter(1,String.class,ParameterMode.IN);
+		query.setParameter(1,json);
 		queryCount.registerStoredProcedureParameter(1,String.class, ParameterMode.IN);
 		queryCount.registerStoredProcedureParameter(2,Integer.class,ParameterMode.OUT);
 		queryCount.setParameter(1,json);
 		queryCount.execute();
 		Integer outParam = (Integer) queryCount.getOutputParameterValue(2);
-		query.setParameter(1,json);
 		list = query.getResultStream().toList();
-		if (studentSearchDTO.getLimit() <= 0){
-			studentSearchDTO.setLimit(10);
-		}
-		if (studentSearchDTO.getPage()<0){
-			studentSearchDTO.setPage(0);
-		}
 		int totalPage =(int) Math.ceil((double)outParam/studentSearchDTO.getLimit());
 		Map<String,Object> result = new HashMap<>();
 		result.put("page",studentSearchDTO.getPage());
 		result.put("total_page", totalPage);
 		result.put("total_items",outParam);
 		result.put("limit", studentSearchDTO.getLimit());
-		result.put("list",list );
+		result.put("list",list.stream().map(studentMapper::toStudentSearchProcedureDTO));
 		return ResponseDTO.success(result);
 	}
 

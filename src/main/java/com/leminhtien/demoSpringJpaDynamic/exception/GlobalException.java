@@ -1,6 +1,6 @@
 package com.leminhtien.demoSpringJpaDynamic.exception;
 
-import com.leminhtien.demoSpringJpaDynamic.dto.CodeResponse;
+import com.leminhtien.demoSpringJpaDynamic.enums.CodeResponse;
 import com.leminhtien.demoSpringJpaDynamic.dto.ResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +13,7 @@ public class GlobalException {
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<ResponseDTO> nullPoint(NullPointerException e){
         return ResponseEntity.ok().body(
-                ResponseDTO.failure(e.getMessage(), CodeResponse.NOT_FOUNT)
+                ResponseDTO.failure(CodeResponse.NOT_FOUNT)
         );
     }
 

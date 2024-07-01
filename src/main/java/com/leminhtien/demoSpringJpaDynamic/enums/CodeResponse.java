@@ -1,4 +1,4 @@
-package com.leminhtien.demoSpringJpaDynamic.dto;
+package com.leminhtien.demoSpringJpaDynamic.enums;
 
 import lombok.Getter;
 

@@ -5,6 +5,7 @@ import com.leminhtien.demoSpringJpaDynamic.dto.request.UpdateStudentDTO;
 import com.leminhtien.demoSpringJpaDynamic.dto.response.DepartmentResponseDTO;
 import com.leminhtien.demoSpringJpaDynamic.dto.response.StudentDTO;
 import com.leminhtien.demoSpringJpaDynamic.dto.response.GetOneStudentDTO;
+import com.leminhtien.demoSpringJpaDynamic.dto.response.StudentSearchByProcedureResponseDTO;
 import com.leminhtien.demoSpringJpaDynamic.entity.DepartmentEntity;
 import com.leminhtien.demoSpringJpaDynamic.entity.StudentEntity;
 import org.mapstruct.*;
@@ -19,7 +20,10 @@ public interface StudentMapper {
     @Mapping( target = "department", source = "department" )
     GetOneStudentDTO toResponseDTO(StudentEntity studentEntity);
 
+    StudentSearchByProcedureResponseDTO toStudentSearchProcedureDTO(StudentEntity studentEntity);
+
     @Mapping(target = "departmentId",source = "department.id")
     StudentDTO toDTO(StudentEntity studentEntity);
      DepartmentResponseDTO toDTO(DepartmentEntity department);
+
 }
